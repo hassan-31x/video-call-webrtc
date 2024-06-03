@@ -6,11 +6,11 @@ import { BrowserRouter } from 'react-router-dom'
 import { SocketProvider } from './providers/SocketProvider.tsx'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <BrowserRouter>
       <SocketProvider>
         <App />
       </SocketProvider>
     </BrowserRouter>
-  </React.StrictMode>,
+  // </React.StrictMode>,
 )

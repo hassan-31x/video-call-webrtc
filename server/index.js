@@ -9,6 +9,19 @@ const io = new Server(PORT, {
   }
 })
 
+const emailToSocketId = new Map()
+const socketIdToEmail = new Map()
+
 io.on("connection", (socket) => {
   console.log("New client connected", socket.id)
+
+  socket.on("room:join", data => {
+    const { room, email } = data
+    emailToSocketId.set(email, socket.id)
+    socketIdToEmail.set(socket.id, email)
+
+    console.log(data)
+
+    io.to(socket.id).emit("room:join", data)
+  })
 })

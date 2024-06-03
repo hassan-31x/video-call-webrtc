@@ -1,10 +1,21 @@
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { useSocket } from "../providers/SocketProvider"
+import { useNavigate } from "react-router-dom"
+
+type Inputs = {
+  email: string
+  room: string
+}
 
 const LobbyPage = () => {
-  const [inputs, setInputs] = useState({
+  const [inputs, setInputs] = useState<Inputs>({
     email: '',
     room: ''
   })
+
+  const socket = useSocket()
+  const navigate = useNavigate()
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -13,7 +24,24 @@ const LobbyPage = () => {
 
   const handleSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-  }, [inputs])
+
+    socket?.emit("room:join", inputs)
+  }, [inputs, socket])
+
+
+  const joinRoom = useCallback(({ email, room }: Inputs) => {
+    console.log(room, email)
+    navigate(`/room/${room}`)
+  }, [])
+
+
+  useEffect(() => {
+    socket?.on("room:join", joinRoom)
+
+    return () => {
+      socket?.off("room:join", joinRoom)
+    }
+  }, [socket])
 
   return (
     <div className="w-full flex items-center flex-col">

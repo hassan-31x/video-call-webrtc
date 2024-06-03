@@ -4,7 +4,7 @@ const PORT = 8080
 
 const io = new Server(PORT, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://192.168.100.46:5173"],
     methods: ["GET", "POST"]
   }
 })
@@ -25,5 +25,13 @@ io.on("connection", (socket) => {
     socket.join(room)
 
     io.to(socket.id).emit("room:join", data)
+  })
+
+  socket.on("user:call", ({ to, offer }) => {
+    io.to(to).emit("incomming:call", { from: socket.id, offer })
+  })
+  
+  socket.on("call:accepted", ({ to, ans }) => {
+    io.to(to).emit("call:accepted", { from: socket.id, ans })
   })
 })

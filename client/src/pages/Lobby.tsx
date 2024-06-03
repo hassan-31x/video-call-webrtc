@@ -1,7 +1,7 @@
 
 const LobbyPage = () => {
   return (
-    <div>LobbyPage</div>
+    <div className="bg-yellow-200">LobbyPage</div>
   )
 }
 

@@ -17,10 +17,12 @@ io.on("connection", (socket) => {
 
   socket.on("room:join", data => {
     const { room, email } = data
+
     emailToSocketId.set(email, socket.id)
     socketIdToEmail.set(socket.id, email)
 
-    console.log(data)
+    io.to(room).emit("user:joined", { email, id: socket.id })
+    socket.join(room)
 
     io.to(socket.id).emit("room:join", data)
   })

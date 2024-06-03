@@ -30,7 +30,7 @@ const LobbyPage = () => {
 
 
   const joinRoom = useCallback(({ email, room }: Inputs) => {
-    console.log(room, email)
+    // console.log(room, email)
     navigate(`/room/${room}`)
   }, [])
 

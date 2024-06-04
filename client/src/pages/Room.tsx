@@ -1,49 +1,51 @@
-import React, { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState } from "react";
 import ReactPlayer from "react-player";
 import peer from "../service/peer";
 import { useSocket } from "../providers/SocketProvider";
 
+type UserRole = 'admin' | 'member'
+
 const RoomPage = () => {
   const socket = useSocket();
+  const [userRole, setUserRole] = useState<UserRole>('member')
+  console.log("🚀 ~ RoomPage ~ userRole:", userRole)
   const [remoteSocketId, setRemoteSocketId] = useState(null);
   const [myStream, setMyStream] = useState();
   const [remoteStream, setRemoteStream] = useState();
+  console.log("🚀 ~ RoomPage ~ remoteStream:", remoteStream)
 
-  const handleUserJoined = useCallback(async ({ email, id }) => {
-    console.log(`Email ${email} joined room`);
+  const handleUserJoined = useCallback(async ({ email, id, member }) => {
+    console.log(`Email ${email} joined room`, member);
+    setUserRole('admin')
     setRemoteSocketId(id);
-    // await handleCallUser()
+
     const offer = await peer.getOffer();
     socket.emit("user:call", { to: id, offer });
 
   }, []);
-  const setStream = async () => {
 
+  const setStream = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
       video: true,
     });
     setMyStream(stream)
   }
+
   useEffect(() => {
    setStream() 
   }, [])
 
   const handleCallUser = useCallback(async () => {
+    console.log('call user func')
     const offer = await peer.getOffer();
     socket.emit("user:call", { to: remoteSocketId, offer });
-    // setMyStream(stream);
   }, [remoteSocketId, socket]);
 
   const handleIncommingCall = useCallback(
     async ({ from, offer }) => {
-      console.log("🚀 ~ from:", from)
       setRemoteSocketId(from);
-      // const stream = await navigator.mediaDevices.getUserMedia({
-      //   audio: true,
-      //   video: true,
-      // });
-      // setMyStream(stream);
+      
       console.log(`Incoming Call`, from, offer);
       const ans = await peer.getAnswer(offer);
       socket.emit("call:accepted", { to: from, ans });
@@ -60,6 +62,7 @@ const RoomPage = () => {
   const handleCallAccepted = useCallback(
     ({ from, ans }) => {
       peer.setLocalDescription(ans);
+      console.log(remoteStream)
       console.log("Call Accepted!");
       sendStreams();
     },
@@ -88,7 +91,16 @@ const RoomPage = () => {
 
   const handleNegoNeedFinal = useCallback(async ({ ans }) => {
     await peer.setLocalDescription(ans);
+    console.log('user => ', userRole)
+    console.log('niga', userRole, remoteSocketId)
+    if (userRole === 'admin') {
+      socket?.emit("send:stream", { to: remoteSocketId })
+    }
   }, []);
+
+  useEffect(() => {
+    console.log('efffect role => ', userRole)
+  }, [userRole])
 
   useEffect(() => {
     peer.peer.addEventListener("track", async (ev) => {
@@ -126,7 +138,7 @@ const RoomPage = () => {
       <h1>Room Page</h1>
       <h4>{remoteSocketId ? "Connected" : "No one in room"}</h4>
       {/* {myStream && <button onClick={sendStreams}>Send Stream</button>} */}
-      {remoteSocketId && <button className="border px-2 py-1 rounded-md bg-slate-300" onClick={handleCallUser}>BEGIN CALL</button>}
+      {remoteSocketId && userRole === 'member' && <button className="border px-2 py-1 rounded-md bg-slate-300" onClick={handleCallUser}>JOIN CALL</button>}
       {myStream && (
         <>
           <h1>My Stream</h1>
